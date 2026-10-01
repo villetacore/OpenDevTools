@@ -1,0 +1,155 @@
+<idea-plugin>
+    <id>com.opendevtools.forge</id>
+    <name>Git Forge Tools</name>
+    <vendor>OpenDevTools</vendor>
+
+    <description><![CDATA[
+    One tool window for every git service you use: <b>GitHub</b>, <b>GitHub Enterprise</b>,
+    <b>GitLab</b>, <b>Gitea</b> and <b>Forgejo</b> - hosted or self-hosted, several accounts at once.
+    <ul>
+      <li>Configure as many accounts as you like: a work GitHub next to a personal one, two GitLab
+          instances, your own Gitea. Each token lives in the IDE password safe</li>
+      <li>Browse repositories with their issues, pull and merge requests, CI runs, releases and
+          branches - one request round per repository, not one per tab</li>
+      <li>Create issues and pull requests, comment, close and reopen, merge with the method the
+          forge actually supports</li>
+      <li>The repository of the open project is detected from its git remote and highlighted</li>
+      <li>Open anything in the browser, copy the HTTPS or SSH clone URL</li>
+    </ul>
+    Self-hosted instances need the server root only; the API path is appended for you.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="Git Forges"
+                    anchor="right"
+                    icon="com.opendevtools.forge.ForgeIcons.ToolWindow"
+                    factoryClass="com.opendevtools.forge.toolwindow.ForgeToolWindowFactory"/>
+
+        <applicationConfigurable id="com.opendevtools.forge.settings"
+                                 parentId="tools"
+                                 displayName="Git Forges"
+                                 instance="com.opendevtools.forge.settings.ForgeConfigurable"/>
+
+        <notificationGroup id="Git Forge Tools" displayType="BALLOON"/>
+    </extensions>
+
+    <actions>
+        <action id="GitForgeTools.Refresh"
+                class="com.opendevtools.forge.actions.RefreshForgesAction"
+                text="Refresh" description="Reload the repositories of every account"
+                icon="AllIcons.Actions.Refresh"/>
+        <action id="GitForgeTools.GoToProject"
+                class="com.opendevtools.forge.actions.GoToProjectRepositoryAction"
+                text="Go to This Project" description="Select the repository of the open project"
+                icon="AllIcons.Actions.MoveTo2"/>
+        <action id="GitForgeTools.OpenInBrowser"
+                class="com.opendevtools.forge.actions.OpenInBrowserAction"
+                text="Open in Browser" description="Open the selected item on the forge"
+                icon="AllIcons.General.Web"/>
+        <action id="GitForgeTools.CopyCloneUrl"
+                class="com.opendevtools.forge.actions.CopyCloneUrlAction"
+                text="Copy HTTPS Clone URL" description="Copy the HTTPS clone URL"
+                icon="AllIcons.Actions.Copy"/>
+        <action id="GitForgeTools.CopySshUrl"
+                class="com.opendevtools.forge.actions.CopySshUrlAction"
+                text="Copy SSH Clone URL" description="Copy the SSH clone URL"/>
+        <action id="GitForgeTools.ShowRemotes"
+                class="com.opendevtools.forge.actions.ShowProjectRemotesAction"
+                text="Show Project Git Remotes"
+                description="What this plugin reads out of the project's .git/config"/>
+
+        <action id="GitForgeTools.NewIssue"
+                class="com.opendevtools.forge.actions.NewIssueAction"
+                text="New Issue..." description="Create an issue in the selected repository"
+                icon="AllIcons.General.Add"/>
+        <action id="GitForgeTools.ShowComments"
+                class="com.opendevtools.forge.actions.ShowCommentsAction"
+                text="Show Discussion"
+                description="Read the description and the comments of the selected item"
+                icon="AllIcons.General.Balloon"/>
+        <action id="GitForgeTools.Comment"
+                class="com.opendevtools.forge.actions.CommentOnIssueAction"
+                text="Comment..." description="Comment on the selected issue or pull request"/>
+        <action id="GitForgeTools.ToggleIssueState"
+                class="com.opendevtools.forge.actions.ToggleIssueStateAction"
+                text="Close Issue" description="Close or reopen the selected issue"/>
+
+        <action id="GitForgeTools.NewPullRequest"
+                class="com.opendevtools.forge.actions.NewPullRequestAction"
+                text="New Pull Request..."
+                description="Open a pull or merge request in the selected repository"
+                icon="AllIcons.General.Add"/>
+        <action id="GitForgeTools.Merge"
+                class="com.opendevtools.forge.actions.MergePullRequestAction"
+                text="Merge..." description="Merge the selected pull request"/>
+
+        <action id="GitForgeTools.ShowForks"
+                class="com.opendevtools.forge.actions.ToggleShowForksAction"
+                text="Show Forks" description="List forked repositories"/>
+        <action id="GitForgeTools.ShowPrivate"
+                class="com.opendevtools.forge.actions.ToggleShowPrivateAction"
+                text="Show Private Repositories" description="List private repositories"/>
+        <group id="GitForgeTools.IssueState"
+               class="com.opendevtools.forge.actions.IssueStateActionGroup"
+               text="Show" description="Which issues and pull requests are listed"/>
+
+        <action id="GitForgeTools.Settings"
+                class="com.opendevtools.forge.actions.OpenForgeSettingsAction"
+                text="Git Forge Settings" description="Manage the configured accounts"
+                icon="AllIcons.General.Settings"/>
+
+        <group id="GitForgeTools.Toolbar">
+            <reference ref="GitForgeTools.Refresh"/>
+            <reference ref="GitForgeTools.GoToProject"/>
+            <separator/>
+            <reference ref="GitForgeTools.NewIssue"/>
+            <reference ref="GitForgeTools.NewPullRequest"/>
+            <separator/>
+            <reference ref="GitForgeTools.OpenInBrowser"/>
+            <separator/>
+            <reference ref="GitForgeTools.IssueState"/>
+            <reference ref="GitForgeTools.ShowForks"/>
+            <reference ref="GitForgeTools.ShowPrivate"/>
+            <separator/>
+            <reference ref="GitForgeTools.Settings"/>
+        </group>
+
+        <group id="GitForgeTools.RepositoryMenu" popup="true">
+            <reference ref="GitForgeTools.OpenInBrowser"/>
+            <reference ref="GitForgeTools.CopyCloneUrl"/>
+            <reference ref="GitForgeTools.CopySshUrl"/>
+            <separator/>
+            <reference ref="GitForgeTools.NewIssue"/>
+            <reference ref="GitForgeTools.NewPullRequest"/>
+            <separator/>
+            <reference ref="GitForgeTools.GoToProject"/>
+            <reference ref="GitForgeTools.ShowRemotes"/>
+            <separator/>
+            <reference ref="GitForgeTools.Refresh"/>
+        </group>
+
+        <group id="GitForgeTools.IssueMenu" popup="true">
+            <reference ref="GitForgeTools.OpenInBrowser"/>
+            <reference ref="GitForgeTools.ShowComments"/>
+            <reference ref="GitForgeTools.Comment"/>
+            <reference ref="GitForgeTools.ToggleIssueState"/>
+            <separator/>
+            <reference ref="GitForgeTools.NewIssue"/>
+        </group>
+
+        <group id="GitForgeTools.PullRequestMenu" popup="true">
+            <reference ref="GitForgeTools.OpenInBrowser"/>
+            <reference ref="GitForgeTools.ShowComments"/>
+            <reference ref="GitForgeTools.Comment"/>
+            <reference ref="GitForgeTools.Merge"/>
+            <separator/>
+            <reference ref="GitForgeTools.NewPullRequest"/>
+        </group>
+
+        <group id="GitForgeTools.OpenMenu" popup="true">
+            <reference ref="GitForgeTools.OpenInBrowser"/>
+        </group>
+    </actions>
+</idea-plugin>

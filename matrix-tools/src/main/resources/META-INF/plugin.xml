@@ -1,0 +1,113 @@
+<idea-plugin>
+    <id>com.opendevtools.matrix</id>
+    <name>Matrix Tools</name>
+    <vendor>OpenDevTools</vendor>
+
+    <description><![CDATA[
+    Read and write <b>Matrix</b> chats from inside the IDE, over the Client-Server API. Works with
+    matrix.org and with any self-hosted homeserver - Synapse, Dendrite, Conduit.
+    <ul>
+      <li>Tool window with the room list, the message timeline and a composer</li>
+      <li>Live updates through the homeserver's own long-polling sync; no timers, no manual refresh</li>
+      <li>Send messages, load earlier history, mark rooms read, join and leave rooms, accept and
+          decline invitations, invite people</li>
+      <li>Unread and highlight counts per room; balloon notifications for mentions or for everything</li>
+      <li>Copy a selection out of the timeline, or paste it straight into the editor</li>
+      <li>Sign in with a password or with an access token; the token lives in the IDE password safe
+          and the password is never stored</li>
+    </ul>
+    <b>End-to-end encrypted rooms are listed but cannot be read.</b> That needs the Olm/Megolm key
+    exchange, which this plugin does not implement; use a full Matrix client for those rooms.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="Matrix"
+                    anchor="right"
+                    icon="com.opendevtools.matrix.MatrixIcons.ToolWindow"
+                    factoryClass="com.opendevtools.matrix.toolwindow.MatrixToolWindowFactory"/>
+
+        <applicationConfigurable id="com.opendevtools.matrix.settings"
+                                 parentId="tools"
+                                 displayName="Matrix"
+                                 instance="com.opendevtools.matrix.settings.MatrixConfigurable"/>
+
+        <notificationGroup id="Matrix Tools" displayType="BALLOON"/>
+    </extensions>
+
+    <actions>
+        <action id="MatrixTools.Reconnect"
+                class="com.opendevtools.matrix.actions.ReconnectAction"
+                text="Reconnect" description="Restart the sync connection to the homeserver"
+                icon="AllIcons.Actions.Refresh"/>
+        <action id="MatrixTools.JoinRoom"
+                class="com.opendevtools.matrix.actions.JoinRoomAction"
+                text="Join Room..." description="Join a room by id or alias"
+                icon="AllIcons.General.Add"/>
+        <action id="MatrixTools.AcceptInvite"
+                class="com.opendevtools.matrix.actions.AcceptInviteAction"
+                text="Accept Invitation" description="Join the room you were invited to"
+                icon="AllIcons.Actions.Execute"/>
+        <action id="MatrixTools.LeaveRoom"
+                class="com.opendevtools.matrix.actions.LeaveRoomAction"
+                text="Leave Room" description="Leave the room or decline the invitation"
+                icon="AllIcons.Actions.Exit"/>
+        <action id="MatrixTools.Invite"
+                class="com.opendevtools.matrix.actions.InviteUserAction"
+                text="Invite User..." description="Invite someone to this room"/>
+        <action id="MatrixTools.MarkRead"
+                class="com.opendevtools.matrix.actions.MarkRoomReadAction"
+                text="Mark as Read" description="Clear the unread count of this room"/>
+        <action id="MatrixTools.CopyAddress"
+                class="com.opendevtools.matrix.actions.CopyRoomAddressAction"
+                text="Copy Room Address" description="Copy the room alias or id"
+                icon="AllIcons.Actions.Copy"/>
+        <action id="MatrixTools.CopySelection"
+                class="com.opendevtools.matrix.actions.CopySelectedMessagesAction"
+                text="Copy Selected Messages" description="Copy the selected part of the timeline"
+                icon="AllIcons.Actions.Copy"/>
+        <action id="MatrixTools.InsertSelection"
+                class="com.opendevtools.matrix.actions.InsertSelectionAtCaretAction"
+                text="Insert Selection at Caret"
+                description="Paste the selected conversation text into the editor"
+                icon="AllIcons.Actions.MenuPaste"/>
+        <action id="MatrixTools.ShowEncrypted"
+                class="com.opendevtools.matrix.actions.ToggleShowEncryptedRoomsAction"
+                text="Show Encrypted Rooms"
+                description="List end-to-end encrypted rooms, whose messages cannot be read here"/>
+        <group id="MatrixTools.Grouping"
+               class="com.opendevtools.matrix.actions.GroupingActionGroup"
+               text="Order" description="How the room list is ordered"/>
+        <action id="MatrixTools.Settings"
+                class="com.opendevtools.matrix.actions.OpenMatrixSettingsAction"
+                text="Matrix Settings" description="Open the Matrix account settings"
+                icon="AllIcons.General.Settings"/>
+
+        <group id="MatrixTools.Toolbar">
+            <reference ref="MatrixTools.Reconnect"/>
+            <reference ref="MatrixTools.JoinRoom"/>
+            <separator/>
+            <reference ref="MatrixTools.MarkRead"/>
+            <reference ref="MatrixTools.CopySelection"/>
+            <separator/>
+            <reference ref="MatrixTools.ShowEncrypted"/>
+            <reference ref="MatrixTools.Grouping"/>
+            <separator/>
+            <reference ref="MatrixTools.Settings"/>
+        </group>
+
+        <group id="MatrixTools.RoomMenu" popup="true">
+            <reference ref="MatrixTools.AcceptInvite"/>
+            <reference ref="MatrixTools.MarkRead"/>
+            <separator/>
+            <reference ref="MatrixTools.Invite"/>
+            <reference ref="MatrixTools.CopyAddress"/>
+            <separator/>
+            <reference ref="MatrixTools.CopySelection"/>
+            <reference ref="MatrixTools.InsertSelection"/>
+            <separator/>
+            <reference ref="MatrixTools.LeaveRoom"/>
+        </group>
+    </actions>
+</idea-plugin>

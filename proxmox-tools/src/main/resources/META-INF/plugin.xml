@@ -1,0 +1,304 @@
+<idea-plugin>
+    <id>com.opendevtools.proxmox</id>
+    <name>Proxmox Tools</name>
+    <vendor>OpenDevTools</vendor>
+
+    <description><![CDATA[
+    Manage a <b>Proxmox VE</b> server or cluster without leaving the IDE.
+    <ul>
+      <li>Tool window with the whole cluster: nodes, QEMU virtual machines, LXC containers, storages and pools,
+          grouped by node, pool or tag</li>
+      <li>Power actions, snapshots, clone, migrate, convert to template and destroy - every Proxmox task is
+          awaited and its log is one click away</li>
+      <li>Create virtual machines and containers from a wizard, and restore a guest from a backup archive</li>
+      <li>Details tabs for configuration, snapshots, backups, network, firewall, statistics and tasks</li>
+      <li>Node view with services, disks, pending updates, replication jobs and the syslog</li>
+      <li>Open the noVNC, serial or SPICE console of a guest, or the shell of a node, in the browser</li>
+      <li>API token or user/password authentication; secrets are kept in the IDE password safe</li>
+    </ul>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="Proxmox"
+                    anchor="right"
+                    icon="com.opendevtools.proxmox.ProxmoxIcons.ToolWindow"
+                    factoryClass="com.opendevtools.proxmox.toolwindow.ProxmoxToolWindowFactory"/>
+
+        <applicationConfigurable id="com.opendevtools.proxmox.settings"
+                                 parentId="tools"
+                                 displayName="Proxmox"
+                                 instance="com.opendevtools.proxmox.settings.ProxmoxConfigurable"/>
+
+        <notificationGroup id="Proxmox Tools" displayType="BALLOON"/>
+    </extensions>
+
+    <actions>
+        <!-- Tool window -->
+        <action id="ProxmoxTools.Refresh"
+                class="com.opendevtools.proxmox.actions.misc.RefreshAction"
+                text="Refresh" description="Reload the Proxmox cluster state"
+                icon="AllIcons.Actions.Refresh"/>
+        <action id="ProxmoxTools.RunningOnly"
+                class="com.opendevtools.proxmox.actions.misc.ToggleRunningOnlyAction"
+                text="Running Only" description="Show only running guests"
+                icon="AllIcons.Actions.Show"/>
+        <group id="ProxmoxTools.Grouping"
+               class="com.opendevtools.proxmox.actions.misc.GroupingActionGroup"
+               text="View" description="How the tree groups guests"/>
+        <action id="ProxmoxTools.Settings"
+                class="com.opendevtools.proxmox.actions.misc.OpenSettingsAction"
+                text="Proxmox Settings" description="Open the Proxmox connection settings"
+                icon="AllIcons.General.Settings"/>
+
+        <!-- Power -->
+        <action id="ProxmoxTools.Start"
+                class="com.opendevtools.proxmox.actions.power.StartGuestAction"
+                text="Start" description="Start the selected guests"
+                icon="AllIcons.Actions.Execute"/>
+        <action id="ProxmoxTools.Shutdown"
+                class="com.opendevtools.proxmox.actions.power.ShutdownGuestAction"
+                text="Shut Down" description="Send an ACPI shutdown to the selected guests"
+                icon="AllIcons.Actions.Suspend"/>
+        <action id="ProxmoxTools.Stop"
+                class="com.opendevtools.proxmox.actions.power.StopGuestAction"
+                text="Stop (Kill)" description="Stop the selected guests immediately"
+                icon="AllIcons.Actions.Cancel"/>
+        <action id="ProxmoxTools.Reboot"
+                class="com.opendevtools.proxmox.actions.power.RebootGuestAction"
+                text="Reboot" description="Reboot the selected guests"
+                icon="AllIcons.Actions.Restart"/>
+        <action id="ProxmoxTools.Reset"
+                class="com.opendevtools.proxmox.actions.power.ResetGuestAction"
+                text="Reset" description="Reset the selected virtual machines"
+                icon="AllIcons.Actions.ForceRefresh"/>
+        <action id="ProxmoxTools.Suspend"
+                class="com.opendevtools.proxmox.actions.power.SuspendGuestAction"
+                text="Suspend" description="Suspend the selected virtual machines"
+                icon="AllIcons.Actions.Pause"/>
+        <action id="ProxmoxTools.Resume"
+                class="com.opendevtools.proxmox.actions.power.ResumeGuestAction"
+                text="Resume" description="Resume the selected virtual machines"
+                icon="AllIcons.Actions.Resume"/>
+        <action id="ProxmoxTools.StartAll"
+                class="com.opendevtools.proxmox.actions.power.StartAllGuestsAction"
+                text="Start All Guests" description="Start every guest marked to start at boot"/>
+        <action id="ProxmoxTools.StopAll"
+                class="com.opendevtools.proxmox.actions.power.StopAllGuestsAction"
+                text="Stop All Guests" description="Stop every running guest on the node"/>
+
+        <!-- Lifecycle -->
+        <action id="ProxmoxTools.CreateVm"
+                class="com.opendevtools.proxmox.actions.lifecycle.CreateVmAction"
+                text="Create Virtual Machine..." description="Create a QEMU virtual machine"
+                icon="AllIcons.General.Add"/>
+        <action id="ProxmoxTools.CreateContainer"
+                class="com.opendevtools.proxmox.actions.lifecycle.CreateContainerAction"
+                text="Create Container..." description="Create an LXC container"
+                icon="AllIcons.General.Add"/>
+        <action id="ProxmoxTools.Clone"
+                class="com.opendevtools.proxmox.actions.lifecycle.CloneGuestAction"
+                text="Clone..." description="Clone the selected guest"
+                icon="AllIcons.Actions.Copy"/>
+        <action id="ProxmoxTools.Migrate"
+                class="com.opendevtools.proxmox.actions.lifecycle.MigrateGuestAction"
+                text="Migrate..." description="Migrate the selected guest to another node"
+                icon="AllIcons.Actions.Forward"/>
+        <action id="ProxmoxTools.ConvertToTemplate"
+                class="com.opendevtools.proxmox.actions.lifecycle.ConvertToTemplateAction"
+                text="Convert to Template" description="Turn the guest into a template"/>
+        <action id="ProxmoxTools.EditConfig"
+                class="com.opendevtools.proxmox.actions.lifecycle.EditGuestConfigAction"
+                text="Edit Configuration..." description="Change name, CPU, memory and options"
+                icon="AllIcons.Actions.Edit"/>
+        <action id="ProxmoxTools.ResizeDisk"
+                class="com.opendevtools.proxmox.actions.lifecycle.ResizeDiskAction"
+                text="Resize Disk..." description="Grow a virtual disk of the guest"/>
+        <action id="ProxmoxTools.Delete"
+                class="com.opendevtools.proxmox.actions.lifecycle.DeleteGuestAction"
+                text="Destroy..." description="Destroy the selected guest"
+                icon="AllIcons.Actions.GC"/>
+
+        <!-- Snapshots -->
+        <action id="ProxmoxTools.CreateSnapshot"
+                class="com.opendevtools.proxmox.actions.snapshot.CreateSnapshotAction"
+                text="Take Snapshot..." description="Take a snapshot of the selected guest"
+                icon="AllIcons.Actions.AddList"/>
+        <action id="ProxmoxTools.RollbackSnapshot"
+                class="com.opendevtools.proxmox.actions.snapshot.RollbackSnapshotAction"
+                text="Roll Back" description="Roll the guest back to the selected snapshot"
+                icon="AllIcons.Actions.Rollback"/>
+        <action id="ProxmoxTools.DeleteSnapshot"
+                class="com.opendevtools.proxmox.actions.snapshot.DeleteSnapshotAction"
+                text="Delete Snapshot" description="Delete the selected snapshot"
+                icon="AllIcons.Actions.GC"/>
+        <action id="ProxmoxTools.EditSnapshot"
+                class="com.opendevtools.proxmox.actions.snapshot.EditSnapshotDescriptionAction"
+                text="Edit Description..." description="Change the snapshot description"
+                icon="AllIcons.Actions.Edit"/>
+
+        <!-- Backup -->
+        <action id="ProxmoxTools.BackupNow"
+                class="com.opendevtools.proxmox.actions.backup.BackupNowAction"
+                text="Back Up Now..." description="Run vzdump for the selected guests"
+                icon="AllIcons.Actions.MenuSaveall"/>
+        <action id="ProxmoxTools.Restore"
+                class="com.opendevtools.proxmox.actions.backup.RestoreBackupAction"
+                text="Restore..." description="Restore the selected backup archive"
+                icon="AllIcons.Actions.Rollback"/>
+        <action id="ProxmoxTools.DeleteVolume"
+                class="com.opendevtools.proxmox.actions.backup.DeleteVolumeAction"
+                text="Delete Volume" description="Delete the selected volume"
+                icon="AllIcons.Actions.GC"/>
+        <action id="ProxmoxTools.ProtectBackup"
+                class="com.opendevtools.proxmox.actions.backup.ToggleBackupProtectionAction"
+                text="Protect" description="Keep this backup out of the retention pruning"/>
+
+        <!-- Console and navigation -->
+        <action id="ProxmoxTools.Console"
+                class="com.opendevtools.proxmox.actions.misc.OpenConsoleAction"
+                text="Open Console" description="Open the Proxmox web console in the browser"
+                icon="AllIcons.General.Web"/>
+        <action id="ProxmoxTools.SerialConsole"
+                class="com.opendevtools.proxmox.actions.misc.OpenSerialConsoleAction"
+                text="Open Serial Console" description="Open the xterm.js console in the browser"/>
+        <action id="ProxmoxTools.OpenWebUi"
+                class="com.opendevtools.proxmox.actions.misc.OpenInWebUiAction"
+                text="Open in Web UI" description="Open the guest page of the Proxmox web UI"/>
+        <action id="ProxmoxTools.CopyVmid"
+                class="com.opendevtools.proxmox.actions.misc.CopyVmidAction"
+                text="Copy VMID" description="Copy the VMID of the selected guests"
+                icon="AllIcons.Actions.Copy"/>
+
+        <!-- Tasks, services and firewall -->
+        <action id="ProxmoxTools.ShowTaskLog"
+                class="com.opendevtools.proxmox.actions.misc.ShowTaskLogAction"
+                text="Show Log" description="Open the log of the selected task"
+                icon="AllIcons.Actions.ShowAsTree"/>
+        <action id="ProxmoxTools.StopTask"
+                class="com.opendevtools.proxmox.actions.misc.StopTaskAction"
+                text="Stop Task" description="Ask the server to stop the running task"
+                icon="AllIcons.Actions.Cancel"/>
+        <action id="ProxmoxTools.StartService"
+                class="com.opendevtools.proxmox.actions.misc.StartServiceAction"
+                text="Start" description="Start the selected service"/>
+        <action id="ProxmoxTools.StopService"
+                class="com.opendevtools.proxmox.actions.misc.StopServiceAction"
+                text="Stop" description="Stop the selected service"/>
+        <action id="ProxmoxTools.RestartService"
+                class="com.opendevtools.proxmox.actions.misc.RestartServiceAction"
+                text="Restart" description="Restart the selected service"/>
+        <action id="ProxmoxTools.ToggleFirewallRule"
+                class="com.opendevtools.proxmox.actions.misc.ToggleFirewallRuleAction"
+                text="Toggle Rule" description="Enable or disable the selected firewall rule"/>
+        <action id="ProxmoxTools.DeleteFirewallRule"
+                class="com.opendevtools.proxmox.actions.misc.DeleteFirewallRuleAction"
+                text="Delete Rule" description="Delete the selected firewall rule"
+                icon="AllIcons.Actions.GC"/>
+        <action id="ProxmoxTools.ToggleGuestFirewall"
+                class="com.opendevtools.proxmox.actions.misc.ToggleGuestFirewallAction"
+                text="Toggle Firewall" description="Enable or disable the firewall of the guest"/>
+
+        <!-- Toolbar of the tool window -->
+        <group id="ProxmoxTools.Toolbar">
+            <reference ref="ProxmoxTools.Refresh"/>
+            <separator/>
+            <reference ref="ProxmoxTools.Start"/>
+            <reference ref="ProxmoxTools.Shutdown"/>
+            <reference ref="ProxmoxTools.Stop"/>
+            <reference ref="ProxmoxTools.Reboot"/>
+            <separator/>
+            <reference ref="ProxmoxTools.CreateSnapshot"/>
+            <reference ref="ProxmoxTools.BackupNow"/>
+            <separator/>
+            <reference ref="ProxmoxTools.Console"/>
+            <separator/>
+            <reference ref="ProxmoxTools.RunningOnly"/>
+            <reference ref="ProxmoxTools.Grouping"/>
+            <separator/>
+            <reference ref="ProxmoxTools.Settings"/>
+        </group>
+
+        <!-- Context menu of the tree -->
+        <group id="ProxmoxTools.ContextMenu" popup="true">
+            <reference ref="ProxmoxTools.Start"/>
+            <reference ref="ProxmoxTools.Shutdown"/>
+            <reference ref="ProxmoxTools.Stop"/>
+            <reference ref="ProxmoxTools.Reboot"/>
+            <reference ref="ProxmoxTools.Reset"/>
+            <reference ref="ProxmoxTools.Suspend"/>
+            <reference ref="ProxmoxTools.Resume"/>
+            <separator/>
+            <reference ref="ProxmoxTools.Console"/>
+            <reference ref="ProxmoxTools.SerialConsole"/>
+            <reference ref="ProxmoxTools.OpenWebUi"/>
+            <separator/>
+            <reference ref="ProxmoxTools.CreateSnapshot"/>
+            <reference ref="ProxmoxTools.BackupNow"/>
+            <separator/>
+            <group id="ProxmoxTools.LifecycleMenu" text="Lifecycle" popup="true">
+                <reference ref="ProxmoxTools.CreateVm"/>
+                <reference ref="ProxmoxTools.CreateContainer"/>
+                <separator/>
+                <reference ref="ProxmoxTools.Clone"/>
+                <reference ref="ProxmoxTools.Migrate"/>
+                <reference ref="ProxmoxTools.ConvertToTemplate"/>
+                <separator/>
+                <reference ref="ProxmoxTools.EditConfig"/>
+                <reference ref="ProxmoxTools.ResizeDisk"/>
+                <reference ref="ProxmoxTools.ToggleGuestFirewall"/>
+                <separator/>
+                <reference ref="ProxmoxTools.Delete"/>
+            </group>
+            <group id="ProxmoxTools.NodeMenu" text="Node" popup="true">
+                <reference ref="ProxmoxTools.StartAll"/>
+                <reference ref="ProxmoxTools.StopAll"/>
+            </group>
+            <separator/>
+            <reference ref="ProxmoxTools.CopyVmid"/>
+            <reference ref="ProxmoxTools.Refresh"/>
+        </group>
+
+        <!-- Context menus of the details tabs -->
+        <group id="ProxmoxTools.SnapshotMenu" popup="true">
+            <reference ref="ProxmoxTools.CreateSnapshot"/>
+            <separator/>
+            <reference ref="ProxmoxTools.RollbackSnapshot"/>
+            <reference ref="ProxmoxTools.EditSnapshot"/>
+            <reference ref="ProxmoxTools.DeleteSnapshot"/>
+        </group>
+
+        <group id="ProxmoxTools.BackupMenu" popup="true">
+            <reference ref="ProxmoxTools.BackupNow"/>
+            <separator/>
+            <reference ref="ProxmoxTools.Restore"/>
+            <reference ref="ProxmoxTools.ProtectBackup"/>
+            <reference ref="ProxmoxTools.DeleteVolume"/>
+        </group>
+
+        <group id="ProxmoxTools.VolumeMenu" popup="true">
+            <reference ref="ProxmoxTools.Restore"/>
+            <reference ref="ProxmoxTools.ProtectBackup"/>
+            <reference ref="ProxmoxTools.DeleteVolume"/>
+        </group>
+
+        <group id="ProxmoxTools.TaskMenu" popup="true">
+            <reference ref="ProxmoxTools.ShowTaskLog"/>
+            <reference ref="ProxmoxTools.StopTask"/>
+        </group>
+
+        <group id="ProxmoxTools.ServiceMenu" popup="true">
+            <reference ref="ProxmoxTools.StartService"/>
+            <reference ref="ProxmoxTools.StopService"/>
+            <reference ref="ProxmoxTools.RestartService"/>
+        </group>
+
+        <group id="ProxmoxTools.FirewallMenu" popup="true">
+            <reference ref="ProxmoxTools.ToggleGuestFirewall"/>
+            <separator/>
+            <reference ref="ProxmoxTools.ToggleFirewallRule"/>
+            <reference ref="ProxmoxTools.DeleteFirewallRule"/>
+        </group>
+    </actions>
+</idea-plugin>

@@ -1,0 +1,257 @@
+<idea-plugin>
+    <id>com.opendevtools.vaultwarden</id>
+    <name>Vaultwarden Tools</name>
+    <vendor>OpenDevTools</vendor>
+
+    <description><![CDATA[
+    Work with a <b>Vaultwarden</b> / Bitwarden vault from inside the IDE, over the
+    Bitwarden-compatible REST API. No <code>bw</code> CLI, no other runtime dependency - the plugin
+    implements the Bitwarden key hierarchy itself.
+    <ul>
+      <li>Tool window with folders, collections, item types, favorites, trash and Sends, plus instant search</li>
+      <li>Create, edit and delete logins, secure notes, cards, identities and SSH keys, with custom
+          fields, URI match rules and per-item master-password re-prompt</li>
+      <li>Copy the user name, password, TOTP code, card number, notes or an SSH key; the clipboard is
+          cleared again after a timeout</li>
+      <li>Password and passphrase generator with the options of the web vault</li>
+      <li>Attachments: download, add and remove</li>
+      <li>Vault report: weak passwords, reused passwords, unsecured websites and logins without 2FA</li>
+      <li>Insert a password or a USERNAME/PASSWORD pair at the caret - handy for <code>.env</code> files</li>
+      <li>Unlock, sync and lock, plus auto-lock after a period of inactivity</li>
+      <li>Secrets are masked by default and never written to disk: the vault keys and the decrypted
+          items live in memory only</li>
+    </ul>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="Vaultwarden"
+                    anchor="right"
+                    icon="com.opendevtools.vaultwarden.VaultwardenIcons.ToolWindow"
+                    factoryClass="com.opendevtools.vaultwarden.toolwindow.VaultwardenToolWindowFactory"/>
+
+        <applicationConfigurable id="com.opendevtools.vaultwarden.settings"
+                                 parentId="tools"
+                                 displayName="Vaultwarden"
+                                 instance="com.opendevtools.vaultwarden.settings.VaultwardenConfigurable"/>
+
+        <notificationGroup id="Vaultwarden Tools" displayType="BALLOON"/>
+    </extensions>
+
+    <actions>
+        <!-- Session -->
+        <action id="VaultwardenTools.Unlock"
+                class="com.opendevtools.vaultwarden.actions.UnlockVaultAction"
+                text="Unlock Vault" description="Derive the vault keys from the master password"
+                icon="AllIcons.Actions.Execute"/>
+        <action id="VaultwardenTools.Lock"
+                class="com.opendevtools.vaultwarden.actions.LockVaultAction"
+                text="Lock Vault" description="Drop the vault keys and lock the vault"
+                icon="AllIcons.Actions.Cancel"/>
+        <action id="VaultwardenTools.Sync"
+                class="com.opendevtools.vaultwarden.actions.SyncVaultAction"
+                text="Sync Vault" description="Pull the latest vault data from the server"
+                icon="AllIcons.Actions.Download"/>
+        <action id="VaultwardenTools.Refresh"
+                class="com.opendevtools.vaultwarden.actions.RefreshVaultAction"
+                text="Refresh" description="Redraw the vault from the data already loaded"
+                icon="AllIcons.Actions.Refresh"/>
+        <action id="VaultwardenTools.Settings"
+                class="com.opendevtools.vaultwarden.actions.OpenVaultwardenSettingsAction"
+                text="Vaultwarden Settings" description="Open the Vaultwarden settings"
+                icon="AllIcons.General.Settings"/>
+
+        <!-- Items -->
+        <group id="VaultwardenTools.NewItem"
+               class="com.opendevtools.vaultwarden.actions.NewItemActionGroup"
+               text="New Item" description="Create a new vault item"/>
+        <action id="VaultwardenTools.EditItem"
+                class="com.opendevtools.vaultwarden.actions.EditItemAction"
+                text="Edit Item..." description="Edit the selected vault item"
+                icon="AllIcons.Actions.Edit"/>
+        <action id="VaultwardenTools.Trash"
+                class="com.opendevtools.vaultwarden.actions.TrashItemAction"
+                text="Move to Trash" description="Move the selected items to the trash"
+                icon="AllIcons.Actions.GC"/>
+        <action id="VaultwardenTools.Restore"
+                class="com.opendevtools.vaultwarden.actions.RestoreItemAction"
+                text="Restore from Trash" description="Restore the selected items"
+                icon="AllIcons.Actions.Rollback"/>
+        <action id="VaultwardenTools.DeletePermanently"
+                class="com.opendevtools.vaultwarden.actions.DeleteItemPermanentlyAction"
+                text="Delete Permanently..." description="Remove the selected items for good"/>
+        <action id="VaultwardenTools.ToggleFavorite"
+                class="com.opendevtools.vaultwarden.actions.ToggleFavoriteAction"
+                text="Add to Favorites" description="Mark or unmark the item as a favorite"
+                icon="AllIcons.Nodes.Favorite"/>
+        <action id="VaultwardenTools.MoveToFolder"
+                class="com.opendevtools.vaultwarden.actions.MoveToFolderAction"
+                text="Move to Folder..." description="Move the selected items to another folder"/>
+
+        <!-- Folders -->
+        <action id="VaultwardenTools.NewFolder"
+                class="com.opendevtools.vaultwarden.actions.NewFolderAction"
+                text="New Folder..." description="Create a folder"
+                icon="AllIcons.Actions.NewFolder"/>
+        <action id="VaultwardenTools.RenameFolder"
+                class="com.opendevtools.vaultwarden.actions.RenameFolderAction"
+                text="Rename Folder..." description="Rename the selected folder"/>
+        <action id="VaultwardenTools.DeleteFolder"
+                class="com.opendevtools.vaultwarden.actions.DeleteFolderAction"
+                text="Delete Folder..." description="Delete the selected folder, keeping its items"/>
+
+        <!-- Copy -->
+        <action id="VaultwardenTools.CopyUsername"
+                class="com.opendevtools.vaultwarden.actions.CopyUsernameAction"
+                text="Copy User Name" description="Copy the user name to the clipboard"
+                icon="AllIcons.Actions.Copy"/>
+        <action id="VaultwardenTools.CopyPassword"
+                class="com.opendevtools.vaultwarden.actions.CopyPasswordAction"
+                text="Copy Password" description="Copy the password to the clipboard"
+                icon="AllIcons.Actions.Copy"/>
+        <action id="VaultwardenTools.CopyTotp"
+                class="com.opendevtools.vaultwarden.actions.CopyTotpAction"
+                text="Copy One-Time Password" description="Generate a TOTP code and copy it"
+                icon="AllIcons.Actions.Refresh"/>
+        <action id="VaultwardenTools.CopyNotes"
+                class="com.opendevtools.vaultwarden.actions.CopyNotesAction"
+                text="Copy Notes" description="Copy the notes to the clipboard"/>
+        <action id="VaultwardenTools.CopyUri"
+                class="com.opendevtools.vaultwarden.actions.CopyUriAction"
+                text="Copy URI" description="Copy the first URI to the clipboard"/>
+        <action id="VaultwardenTools.CopyCardNumber"
+                class="com.opendevtools.vaultwarden.actions.CopyCardNumberAction"
+                text="Copy Card Number" description="Copy the card number to the clipboard"/>
+        <action id="VaultwardenTools.CopyCardCode"
+                class="com.opendevtools.vaultwarden.actions.CopyCardCodeAction"
+                text="Copy Security Code" description="Copy the card security code to the clipboard"/>
+        <action id="VaultwardenTools.CopySshPublicKey"
+                class="com.opendevtools.vaultwarden.actions.CopySshPublicKeyAction"
+                text="Copy Public Key" description="Copy the SSH public key to the clipboard"/>
+        <action id="VaultwardenTools.CopySshPrivateKey"
+                class="com.opendevtools.vaultwarden.actions.CopySshPrivateKeyAction"
+                text="Copy Private Key" description="Copy the SSH private key to the clipboard"/>
+        <action id="VaultwardenTools.DeleteSend"
+                class="com.opendevtools.vaultwarden.actions.DeleteSendAction"
+                text="Delete Send..." description="Delete the selected Send"/>
+        <action id="VaultwardenTools.CopySendLink"
+                class="com.opendevtools.vaultwarden.actions.CopySendLinkAction"
+                text="Copy Send Link" description="Copy the share link of the selected Send"/>
+
+        <!-- Editor integration -->
+        <action id="VaultwardenTools.InsertPassword"
+                class="com.opendevtools.vaultwarden.actions.InsertPasswordAction"
+                text="Insert Password at Caret" description="Paste the password into the current editor"
+                icon="AllIcons.Actions.MenuPaste"/>
+        <action id="VaultwardenTools.InsertCredentials"
+                class="com.opendevtools.vaultwarden.actions.InsertCredentialsAction"
+                text="Insert Credentials at Caret"
+                description="Paste USERNAME and PASSWORD lines into the current editor"/>
+        <action id="VaultwardenTools.OpenUri"
+                class="com.opendevtools.vaultwarden.actions.OpenUriAction"
+                text="Open URI" description="Open the first URI of the item in the browser"
+                icon="AllIcons.General.Web"/>
+
+        <!-- Attachments -->
+        <action id="VaultwardenTools.SaveAttachment"
+                class="com.opendevtools.vaultwarden.actions.SaveAttachmentAction"
+                text="Save Attachment..." description="Download and decrypt an attachment"
+                icon="AllIcons.Actions.Download"/>
+        <action id="VaultwardenTools.AddAttachment"
+                class="com.opendevtools.vaultwarden.actions.AddAttachmentAction"
+                text="Attach File..." description="Encrypt and upload a file to the item"/>
+        <action id="VaultwardenTools.DeleteAttachment"
+                class="com.opendevtools.vaultwarden.actions.DeleteAttachmentAction"
+                text="Delete Attachment..." description="Remove an attachment from the item"/>
+
+        <!-- Tools -->
+        <action id="VaultwardenTools.Generate"
+                class="com.opendevtools.vaultwarden.actions.GeneratePasswordAction"
+                text="Generate Password..." description="Generate a password or a passphrase"
+                icon="com.opendevtools.vaultwarden.VaultwardenIcons.Generator"/>
+        <action id="VaultwardenTools.Report"
+                class="com.opendevtools.vaultwarden.actions.VaultReportAction"
+                text="Vault Report" description="Weak and reused passwords, unsecured sites, missing 2FA"
+                icon="com.opendevtools.vaultwarden.VaultwardenIcons.Report"/>
+        <action id="VaultwardenTools.ShowSecrets"
+                class="com.opendevtools.vaultwarden.actions.ToggleShowSecretsAction"
+                text="Show Secrets" description="Reveal masked values in the details pane"
+                icon="AllIcons.Actions.Preview"/>
+        <action id="VaultwardenTools.FavoritesOnly"
+                class="com.opendevtools.vaultwarden.actions.ToggleFavoritesOnlyAction"
+                text="Favorites Only" description="Show only the items marked as favorites"
+                icon="AllIcons.Nodes.Favorite"/>
+        <group id="VaultwardenTools.Grouping"
+               class="com.opendevtools.vaultwarden.actions.GroupingActionGroup"
+               text="View" description="How the tree groups items"/>
+
+        <!-- Toolbar -->
+        <group id="VaultwardenTools.Toolbar">
+            <reference ref="VaultwardenTools.Refresh"/>
+            <reference ref="VaultwardenTools.Sync"/>
+            <separator/>
+            <reference ref="VaultwardenTools.NewItem"/>
+            <reference ref="VaultwardenTools.EditItem"/>
+            <separator/>
+            <reference ref="VaultwardenTools.CopyUsername"/>
+            <reference ref="VaultwardenTools.CopyPassword"/>
+            <reference ref="VaultwardenTools.CopyTotp"/>
+            <separator/>
+            <reference ref="VaultwardenTools.Generate"/>
+            <reference ref="VaultwardenTools.Report"/>
+            <separator/>
+            <reference ref="VaultwardenTools.ShowSecrets"/>
+            <reference ref="VaultwardenTools.FavoritesOnly"/>
+            <reference ref="VaultwardenTools.Grouping"/>
+            <separator/>
+            <reference ref="VaultwardenTools.Unlock"/>
+            <reference ref="VaultwardenTools.Lock"/>
+            <reference ref="VaultwardenTools.Settings"/>
+        </group>
+
+        <!-- Context menu -->
+        <group id="VaultwardenTools.ContextMenu" popup="true">
+            <reference ref="VaultwardenTools.CopyUsername"/>
+            <reference ref="VaultwardenTools.CopyPassword"/>
+            <reference ref="VaultwardenTools.CopyTotp"/>
+            <group id="VaultwardenTools.CopyMore" text="Copy Other" popup="true">
+                <reference ref="VaultwardenTools.CopyUri"/>
+                <reference ref="VaultwardenTools.CopyNotes"/>
+                <reference ref="VaultwardenTools.CopyCardNumber"/>
+                <reference ref="VaultwardenTools.CopyCardCode"/>
+                <reference ref="VaultwardenTools.CopySshPublicKey"/>
+                <reference ref="VaultwardenTools.CopySshPrivateKey"/>
+                <reference ref="VaultwardenTools.CopySendLink"/>
+            </group>
+            <reference ref="VaultwardenTools.DeleteSend"/>
+            <separator/>
+            <reference ref="VaultwardenTools.InsertPassword"/>
+            <reference ref="VaultwardenTools.InsertCredentials"/>
+            <reference ref="VaultwardenTools.OpenUri"/>
+            <separator/>
+            <reference ref="VaultwardenTools.NewItem"/>
+            <reference ref="VaultwardenTools.EditItem"/>
+            <reference ref="VaultwardenTools.ToggleFavorite"/>
+            <reference ref="VaultwardenTools.MoveToFolder"/>
+            <separator/>
+            <group id="VaultwardenTools.AttachmentMenu" text="Attachments" popup="true">
+                <reference ref="VaultwardenTools.SaveAttachment"/>
+                <reference ref="VaultwardenTools.AddAttachment"/>
+                <reference ref="VaultwardenTools.DeleteAttachment"/>
+            </group>
+            <group id="VaultwardenTools.FolderMenu" text="Folders" popup="true">
+                <reference ref="VaultwardenTools.NewFolder"/>
+                <reference ref="VaultwardenTools.RenameFolder"/>
+                <reference ref="VaultwardenTools.DeleteFolder"/>
+            </group>
+            <separator/>
+            <reference ref="VaultwardenTools.Trash"/>
+            <reference ref="VaultwardenTools.Restore"/>
+            <reference ref="VaultwardenTools.DeletePermanently"/>
+            <separator/>
+            <reference ref="VaultwardenTools.Sync"/>
+            <reference ref="VaultwardenTools.Lock"/>
+        </group>
+    </actions>
+</idea-plugin>

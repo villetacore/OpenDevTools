@@ -1,0 +1,229 @@
+<idea-plugin>
+    <id>com.opendevtools.gpg</id>
+    <name>GPG Tools</name>
+    <vendor>OpenDevTools</vendor>
+
+    <description><![CDATA[
+    A certificate manager and an OpenPGP front end in the IDE, in the spirit of <b>Kleopatra</b>.
+    It drives your own <b>GnuPG</b> installation, so it works on the keyring you already have.
+    <ul>
+      <li>Tool window listing your certificates and everyone else's, with user ids, subkeys,
+          capabilities, validity, owner trust and certifications</li>
+      <li>Generate a key pair; add identities and subkeys; move expiry dates; change the passphrase</li>
+      <li>Certify other people's keys, locally or exportably, and set owner trust</li>
+      <li>Import and export certificates and secret keys, from files or the clipboard, armored or
+          binary, including the SSH public key form</li>
+      <li>Search a keyserver, receive, publish and refresh; look a key up by mail address</li>
+      <li>Encrypt, decrypt, sign and verify files from the project view - to certificates or to a
+          passphrase, with detached or attached signatures</li>
+      <li>The same four operations on an editor selection, piped through gpg without ever
+          touching the disk</li>
+    </ul>
+    <b>Passphrases are handled by gpg-agent through its own pinentry dialog.</b> This plugin never
+    sees a passphrase or a private key, and stores no secret of its own. It also reads only
+    GnuPG's machine-readable output, so it behaves the same whatever language gpg speaks.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="GPG"
+                    anchor="right"
+                    icon="com.opendevtools.gpg.GpgIcons.ToolWindow"
+                    factoryClass="com.opendevtools.gpg.toolwindow.GpgToolWindowFactory"/>
+
+        <applicationConfigurable id="com.opendevtools.gpg.settings"
+                                 parentId="tools"
+                                 displayName="GPG"
+                                 instance="com.opendevtools.gpg.settings.GpgConfigurable"/>
+
+        <notificationGroup id="GPG Tools" displayType="BALLOON"/>
+    </extensions>
+
+    <actions>
+        <!-- Keyring -->
+        <action id="GpgTools.Refresh"
+                class="com.opendevtools.gpg.actions.RefreshKeyringAction"
+                text="Refresh Keyring" description="Read the keyring again"
+                icon="AllIcons.Actions.Refresh"/>
+        <action id="GpgTools.GenerateKey"
+                class="com.opendevtools.gpg.actions.GenerateKeyAction"
+                text="New Key Pair..." description="Generate a new certificate"
+                icon="AllIcons.General.Add"/>
+        <action id="GpgTools.Import"
+                class="com.opendevtools.gpg.actions.ImportCertificateAction"
+                text="Import Certificate..." description="Import certificates from a file"
+                icon="AllIcons.ToolbarDecorator.Import"/>
+        <action id="GpgTools.ImportClipboard"
+                class="com.opendevtools.gpg.actions.ImportFromClipboardAction"
+                text="Import from Clipboard"
+                description="Import the OpenPGP block on the clipboard"/>
+        <action id="GpgTools.LookUp"
+                class="com.opendevtools.gpg.actions.LookUpOnServerAction"
+                text="Look Up on Server..." description="Search a keyserver and import what you pick"
+                icon="com.opendevtools.gpg.GpgIcons.Keyserver"/>
+
+        <!-- One certificate -->
+        <action id="GpgTools.Export"
+                class="com.opendevtools.gpg.actions.ExportCertificateAction"
+                text="Export..." description="Write this certificate to a file"
+                icon="AllIcons.ToolbarDecorator.Export"/>
+        <action id="GpgTools.ShowArmored"
+                class="com.opendevtools.gpg.actions.CopyCertificateAction"
+                text="Show as Text" description="Show the armored certificate, ready to copy"
+                icon="AllIcons.Actions.Copy"/>
+        <action id="GpgTools.CopyFingerprint"
+                class="com.opendevtools.gpg.actions.CopyFingerprintAction"
+                text="Copy Fingerprint" description="Copy the fingerprint of this certificate"/>
+        <action id="GpgTools.Certify"
+                class="com.opendevtools.gpg.actions.CertifyKeyAction"
+                text="Certify..." description="Sign this certificate with one of your keys"
+                icon="com.opendevtools.gpg.GpgIcons.Signature"/>
+        <action id="GpgTools.OwnerTrust"
+                class="com.opendevtools.gpg.actions.SetOwnerTrustAction"
+                text="Change Owner Trust..."
+                description="Say how far you trust this key to certify others"/>
+        <action id="GpgTools.ChangeExpiry"
+                class="com.opendevtools.gpg.actions.ChangeExpiryAction"
+                text="Change Expiry..." description="Move the expiry date of this key"/>
+        <action id="GpgTools.AddUserId"
+                class="com.opendevtools.gpg.actions.AddUserIdAction"
+                text="Add User ID..." description="Add another identity to this certificate"
+                icon="com.opendevtools.gpg.GpgIcons.UserId"/>
+        <action id="GpgTools.RevokeUserId"
+                class="com.opendevtools.gpg.actions.RevokeUserIdAction"
+                text="Revoke User ID..." description="Mark one identity as no longer valid"/>
+        <action id="GpgTools.AddSubkey"
+                class="com.opendevtools.gpg.actions.AddSubkeyAction"
+                text="Add Subkey..." description="Add an encryption, signing or authentication subkey"
+                icon="com.opendevtools.gpg.GpgIcons.Subkey"/>
+        <action id="GpgTools.ChangePassphrase"
+                class="com.opendevtools.gpg.actions.ChangePassphraseAction"
+                text="Change Passphrase..." description="Change the passphrase of this secret key"/>
+        <action id="GpgTools.SetDefaultSigningKey"
+                class="com.opendevtools.gpg.actions.SetDefaultSigningKeyAction"
+                text="Set as Default Signing Key"
+                description="Preselect this key in the signing and encryption dialogs"/>
+        <action id="GpgTools.SendToServer"
+                class="com.opendevtools.gpg.actions.SendToServerAction"
+                text="Publish on Server" description="Send this certificate to the keyserver"/>
+        <action id="GpgTools.RefreshFromServer"
+                class="com.opendevtools.gpg.actions.RefreshFromServerAction"
+                text="Refresh from Server"
+                description="Fetch updates to this certificate from the keyserver"/>
+        <action id="GpgTools.RevokeCertificate"
+                class="com.opendevtools.gpg.actions.RevokeCertificateAction"
+                text="Revoke Certificate..."
+                description="Apply the revocation certificate GnuPG created with this key"/>
+        <action id="GpgTools.Delete"
+                class="com.opendevtools.gpg.actions.DeleteCertificateAction"
+                text="Delete from Keyring..." description="Remove this certificate from the keyring"
+                icon="AllIcons.General.Remove"/>
+
+        <!-- View -->
+        <action id="GpgTools.OnlyMine"
+                class="com.opendevtools.gpg.actions.ToggleOnlySecretKeysAction"
+                text="Only My Certificates"
+                description="Hide certificates whose secret key you do not have"/>
+        <action id="GpgTools.ShowInvalid"
+                class="com.opendevtools.gpg.actions.ToggleShowInvalidAction"
+                text="Show Revoked and Expired"
+                description="List certificates that can no longer be used"/>
+        <action id="GpgTools.Settings"
+                class="com.opendevtools.gpg.actions.OpenGpgSettingsAction"
+                text="GPG Settings" description="Open the GPG settings"
+                icon="AllIcons.General.Settings"/>
+
+        <!-- Files and editor -->
+        <action id="GpgTools.EncryptFiles"
+                class="com.opendevtools.gpg.actions.EncryptFilesAction"
+                text="Encrypt with GPG..." description="Encrypt the selected files to certificates"/>
+        <action id="GpgTools.SymmetricEncrypt"
+                class="com.opendevtools.gpg.actions.SymmetricEncryptAction"
+                text="Encrypt with a Passphrase"
+                description="Encrypt this file to a passphrase rather than to a key"/>
+        <action id="GpgTools.SignFiles"
+                class="com.opendevtools.gpg.actions.SignFilesAction"
+                text="Sign with GPG..." description="Sign the selected files"/>
+        <action id="GpgTools.DecryptVerifyFiles"
+                class="com.opendevtools.gpg.actions.DecryptVerifyFilesAction"
+                text="Decrypt / Verify with GPG"
+                description="Decrypt an encrypted file, or check a signature"/>
+        <action id="GpgTools.EncryptSelection"
+                class="com.opendevtools.gpg.actions.EncryptSelectionAction"
+                text="Encrypt Selection" description="Replace the selection with an encrypted block"/>
+        <action id="GpgTools.SignSelection"
+                class="com.opendevtools.gpg.actions.SignSelectionAction"
+                text="Sign Selection" description="Replace the selection with a signed block"/>
+        <action id="GpgTools.DecryptSelection"
+                class="com.opendevtools.gpg.actions.DecryptSelectionAction"
+                text="Decrypt Selection" description="Replace the selected block with its plaintext"/>
+        <action id="GpgTools.VerifySelection"
+                class="com.opendevtools.gpg.actions.VerifySelectionAction"
+                text="Verify Selection" description="Check the signature on the selected block"/>
+        <action id="GpgTools.ShowMyCertificate"
+                class="com.opendevtools.gpg.actions.ShowMyCertificateAction"
+                text="Show My Certificate"
+                description="Show your own armored certificate, ready to send to someone"/>
+
+        <!-- Tool window toolbar -->
+        <group id="GpgTools.Toolbar">
+            <reference ref="GpgTools.Refresh"/>
+            <reference ref="GpgTools.GenerateKey"/>
+            <reference ref="GpgTools.Import"/>
+            <reference ref="GpgTools.LookUp"/>
+            <separator/>
+            <reference ref="GpgTools.Certify"/>
+            <reference ref="GpgTools.Export"/>
+            <separator/>
+            <reference ref="GpgTools.OnlyMine"/>
+            <reference ref="GpgTools.ShowInvalid"/>
+            <separator/>
+            <reference ref="GpgTools.Settings"/>
+        </group>
+
+        <!-- Tool window context menu -->
+        <group id="GpgTools.CertificateMenu" popup="true">
+            <reference ref="GpgTools.ShowArmored"/>
+            <reference ref="GpgTools.Export"/>
+            <reference ref="GpgTools.CopyFingerprint"/>
+            <separator/>
+            <reference ref="GpgTools.Certify"/>
+            <reference ref="GpgTools.OwnerTrust"/>
+            <reference ref="GpgTools.SetDefaultSigningKey"/>
+            <separator/>
+            <reference ref="GpgTools.AddUserId"/>
+            <reference ref="GpgTools.RevokeUserId"/>
+            <reference ref="GpgTools.AddSubkey"/>
+            <reference ref="GpgTools.ChangeExpiry"/>
+            <reference ref="GpgTools.ChangePassphrase"/>
+            <separator/>
+            <reference ref="GpgTools.SendToServer"/>
+            <reference ref="GpgTools.RefreshFromServer"/>
+            <reference ref="GpgTools.ImportClipboard"/>
+            <separator/>
+            <reference ref="GpgTools.RevokeCertificate"/>
+            <reference ref="GpgTools.Delete"/>
+        </group>
+
+        <!-- Project view -->
+        <group id="GpgTools.FileMenu" popup="true" text="GPG" icon="com.opendevtools.gpg.GpgIcons.ToolWindow">
+            <reference ref="GpgTools.EncryptFiles"/>
+            <reference ref="GpgTools.SymmetricEncrypt"/>
+            <reference ref="GpgTools.SignFiles"/>
+            <reference ref="GpgTools.DecryptVerifyFiles"/>
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </group>
+
+        <!-- Editor -->
+        <group id="GpgTools.EditorMenu" popup="true" text="GPG" icon="com.opendevtools.gpg.GpgIcons.ToolWindow">
+            <reference ref="GpgTools.EncryptSelection"/>
+            <reference ref="GpgTools.SignSelection"/>
+            <reference ref="GpgTools.DecryptSelection"/>
+            <reference ref="GpgTools.VerifySelection"/>
+            <separator/>
+            <reference ref="GpgTools.ShowMyCertificate"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </group>
+    </actions>
+</idea-plugin>
